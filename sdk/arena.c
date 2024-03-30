@@ -2,7 +2,7 @@
 
 typedef struct region_t
 {
-  region_t *next;
+  struct region_t *next;
   unsigned count, capacity;
 
   uintptr_t data[];
@@ -42,31 +42,31 @@ void *arena_allocate(arena_t *arena, size_t size)
     
     size_t capacity = _Default;
     
-    if (capacity < size)
-      capacity = size;
+    if (capacity < new)
+      capacity = new;
     
     arena->end   = region_create(capacity);
     arena->begin = arena->end;
   }
 
-  while (arena->end->count + size > arena->end->capacity && arena->end->next != NULL)
+  while (arena->end->count + new > arena->end->capacity && arena->end->next != NULL)
     arena->end = arena->end->next;
 
-  if (arena->end->count + size > arena->end->capacity)
+  if (arena->end->count + new > arena->end->capacity)
   {
     assert(arena->end->next == NULL);
     
     size_t capacity = _Default;
 
-    if (capacity < size)
-      capacity = size;
+    if (capacity < new)
+      capacity = new;
     
     arena->end->next = region_create(capacity);
     arena->end       = arena->end->next;
   }
 
   void *result = &arena->end->data[arena->end->count];
-  arena->end->count += size;
+  arena->end->count += new;
 
   return result;
 }
