@@ -3,7 +3,7 @@
 typedef struct region_t
 {
   struct region_t *next;
-  unsigned count, capacity;
+  uint count, capacity;
 
   uintptr_t data[];
 } region_t;
