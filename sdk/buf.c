@@ -5,7 +5,7 @@ static const uint _Grow = 8; // elements
 
 static inline bool grow(buf_t *buffer)
 {
-  size_t new = buffer->size + buffer->stride * _Grow;
+  uint new = buffer->size + buffer->stride * _Grow;
 
   void *ptr = reallocate(buffer->allocator, buffer->data, buffer->size, new);
   assert(ptr);
@@ -21,7 +21,7 @@ static inline bool grow(buf_t *buffer)
   return false;
 }
 
-buf_t *buf_create(size_t reserve, size_t stride, allocator_t *allocator)
+buf_t *buf_create(uint reserve, uint stride, allocator_t *allocator)
 {
   buf_t *buffer = allocate(allocator, sizeof(buffer_t));
   assert(buffer);
@@ -55,7 +55,7 @@ void buf_delete(buf_t *buffer)
   deallocate(buffer->allocator, buffer);
 }
 
-int buf_push(buf_t *buffer, const void *src)
+uint buf_push(buf_t *buffer, const void *src)
 {
   assert(buffer && buffer->data && src);
 
@@ -69,7 +69,7 @@ int buf_push(buf_t *buffer, const void *src)
   return buffer->top - buffer->data;
 }
 
-int buf_pop(buf_t *buffer, void *dst)
+uint buf_pop(buf_t *buffer, void *dst)
 {
   assert(buffer && buffer->data && dst);
 
@@ -92,17 +92,17 @@ void *buf_next(buf_t *buffer)
   return ptr;
 }
 
-int buf_full(buf_t *buffer)
+uint buf_full(buf_t *buffer)
 {
   return buffer->data + buffer->size == buffer->top;
 }
 
-int buf_empty(buf_t *buffer)
+uint buf_empty(buf_t *buffer)
 {
   return buffer->top == buffer->data;
 }
 
-int buf_length(buf_t *buffer)
+uint buf_length(buf_t *buffer)
 {
   return buffer->size / buffer->stride;
 }
