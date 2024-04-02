@@ -3,11 +3,11 @@
 
 static const uint _Grow = 8; // elements
 
-static inline bool grow(buffer_t *buffer)
+static inline bool grow(buf_t *buffer)
 {
   size_t new = buffer->size + buffer->stride * _Grow;
 
-  void *ptr = realloc(buffer->data, new);
+  void *ptr = reallocate(buffer->allocator, buffer->data, buffer->size, new);
   assert(ptr);
 
   if (ptr)
@@ -21,41 +21,43 @@ static inline bool grow(buffer_t *buffer)
   return false;
 }
 
-buffer_t *buf_create(size_t reserve, size_t stride)
+buf_t *buf_create(size_t reserve, size_t stride, allocator_t *allocator)
 {
-  buffer_t *buf = malloc(sizeof(buffer_t));
-  assert(buf);
+  buf_t *buffer = allocate(allocator, sizeof(buffer_t));
+  assert(buffer);
 
-  if (!buf)
+  if (!buffer)
     return NULL;
 
-  buf->top    = 0;
-  buf->stride = stride;
-  buf->size   = stride * min(8, reserve);
-  
-  buf->data = malloc(buf->size);
-  assert(buf->data);
+  buffer->allocator = allocator;
 
-  if (!buf->data)
+  buffer->top    = 0;
+  buffer->stride = stride;
+  buffer->size   = stride * min(8, reserve);
+  
+  buffer->data = allocate(allocator, buffer->size);
+  assert(buffer->data);
+
+  if (!buffer->data)
   {
-    free(buf);
+    deallocate(allocator, buffer);
     return NULL;
   }
 
-  return buf;
+  return buffer;
 }
 
-void buf_delete(buffer_t *buffer)
+void buf_delete(buf_t *buffer)
 {
   assert(buffer && buffer->data);
 
-  free(buffer->data);
-  free(buffer);
+  deallocate(buffer->allocator, buffer->data);
+  deallocate(buffer->allocator, buffer);
 }
 
-int buf_push(buffer_t *buffer, const void *src)
+int buf_push(buf_t *buffer, const void *src)
 {
-  assert(buffer && buffer->data);
+  assert(buffer && buffer->data && src);
 
   if (buf_full(buffer))
     if (!grow(buffer))
@@ -67,9 +69,9 @@ int buf_push(buffer_t *buffer, const void *src)
   return buffer->top - buffer->data;
 }
 
-int buf_pop(buffer_t *buffer, void *dst)
+int buf_pop(buf_t *buffer, void *dst)
 {
-  assert(buffer && buffer->data);
+  assert(buffer && buffer->data && dst);
 
   if (buf_empty(buffer))
     return -1;
@@ -80,12 +82,27 @@ int buf_pop(buffer_t *buffer, void *dst)
   return buffer->top - buffer->data;
 }
 
-int buf_full(buffer_t *buffer)
+void *buf_next(buf_t *buffer)
+{
+  assert(buffer && buffer->data);
+
+  void *ptr = buffer->top;
+  buffer->top += buffer->stride;
+
+  return ptr;
+}
+
+int buf_full(buf_t *buffer)
 {
   return buffer->data + buffer->size == buffer->top;
 }
 
-int buf_empty(buffer_t *buffer)
+int buf_empty(buf_t *buffer)
 {
   return buffer->top == buffer->data;
+}
+
+int buf_length(buf_t *buffer)
+{
+  return buffer->size / buffer->stride;
 }

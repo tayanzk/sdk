@@ -2,20 +2,25 @@
 #define _BUF_h 1
 
 #include <sdk/sdk.h>
+#include <sdk/alloc.h>
 
-typedef struct buffer_t
+typedef struct buf_t
 {
   char *data, *top;
   size_t size, stride;
-} buffer_t;
 
-buffer_t *buf_create(size_t reserve, size_t stride);
-void buf_delete(buffer_t *buffer);
+  allocator_t *allocator;
+} buf_t;
 
-int buf_push(buffer_t *buffer, const void *src);
-int buf_pop(buffer_t *buffer, void *dst);
+buf_t *buf_create(size_t reserve, size_t stride, allocator_t *allocator);
+void buf_delete(buf_t *buffer);
 
-int buf_full(buffer_t *buffer);
-int buf_empty(buffer_t *buffer);
+int buf_push(buf_t *buffer, const void *src);
+int buf_pop(buf_t *buffer, void *dst);
+void *buf_next(buf_t *buffer);
+
+int buf_full(buf_t *buffer);
+int buf_empty(buf_t *buffer);
+int bus_length(buf_t *buffer);
 
 #endif
