@@ -217,7 +217,6 @@ uint fs_read(fs_item_t *item, char **data, uint bytes)
   return read;
 }
 
-// TODO: Implement
 uint fs_write(fs_item_t *item, const char *data, uint bytes)
 {
   assert(item != NULL);
