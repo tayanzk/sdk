@@ -8,7 +8,7 @@ typedef struct region_t
   uintptr_t data[];
 } region_t;
 
-static const uint _Default = (12 * 1024);
+static const uint _Default = (8 * 1024);
 
 region_t *region_create(size_t capacity)
 {
@@ -29,11 +29,15 @@ region_t *region_create(size_t capacity)
 
 void region_delete(region_t *region)
 {
+  assert(region);
+
   free(region);
 }
 
 void *arena_allocate(arena_t *arena, size_t size)
 {
+  assert(arena && size);
+
   size_t new = (size + sizeof(uintptr_t) - 1) / sizeof(uintptr_t);
 
   if (arena->end == NULL)
@@ -44,6 +48,8 @@ void *arena_allocate(arena_t *arena, size_t size)
     
     if (capacity < new)
       capacity = new;
+
+    arena->total += capacity * sizeof(uintptr_t);
     
     arena->end   = region_create(capacity);
     arena->begin = arena->end;
@@ -60,13 +66,17 @@ void *arena_allocate(arena_t *arena, size_t size)
 
     if (capacity < new)
       capacity = new;
+
+    arena->total += capacity * sizeof(uintptr_t);
     
     arena->end->next = region_create(capacity);
     arena->end       = arena->end->next;
   }
 
   void *result = &arena->end->data[arena->end->count];
+  
   arena->end->count += new;
+  arena->consumed   += new * sizeof(uintptr_t);
 
   return result;
 }
@@ -82,12 +92,23 @@ void *arena_reallocate(arena_t *arena, void *ptr, size_t old, size_t new)
   for (size_t i = 0; i < old; i++)
     cnew[i] = cptr[i];
 
-  return new;
+  return cnew;
+}
+
+void *arena_deallocate(arena_t *arena, void *ptr)
+{
+  // TODO: check if `ptr` is inside one of the arenas regions
+  assert(arena && ptr);
+
+  return NULL;
 }
 
 void arena_reset(arena_t *arena)
 {
+  assert(arena);
+
   region_t *it = arena->begin;
+  arena->consumed = 0;
 
   while (it)
   {
@@ -98,8 +119,10 @@ void arena_reset(arena_t *arena)
   arena->end = arena->begin;
 }
 
-void arena_free(arena_t *arena)
+void arena_delete(arena_t *arena)
 {
+  assert(arena);
+  
   region_t *region = arena->begin;
 
   while (region)
@@ -112,4 +135,7 @@ void arena_free(arena_t *arena)
 
   arena->begin = NULL;
   arena->end   = NULL;
+
+  arena->total    = 0;
+  arena->consumed = 0;
 }
