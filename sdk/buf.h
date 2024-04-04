@@ -21,6 +21,6 @@ void *buf_next(buf_t *buffer);
 
 uint buf_full(buf_t *buffer);
 uint buf_empty(buf_t *buffer);
-uint bus_length(buf_t *buffer);
+uint buf_length(buf_t *buffer);
 
 #endif

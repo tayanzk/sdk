@@ -23,7 +23,7 @@ static inline bool grow(buf_t *buffer)
 
 buf_t *buf_create(uint reserve, uint stride, allocator_t *allocator)
 {
-  buf_t *buffer = allocate(allocator, sizeof(buffer_t));
+  buf_t *buffer = allocate(allocator, sizeof(buf_t));
   assert(buffer);
 
   if (!buffer)
