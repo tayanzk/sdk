@@ -20,23 +20,21 @@ static char _DirectoryName[FS_PATH_MAX] = { 0 };
 static void fs_absolute(const char *path, char *absolute[FS_PATH_MAX])
 {
   static char _Temp[FS_PATH_MAX] = { 0 };
-
-  char *absolute;
   int length;
 
   if (!realpath(path, _Temp))
-    return NULL;
+    return;
 
   length = strnlen(_Temp, FS_PATH_MAX);
   assert(length > 0);
 
   if (length <= 0)
-    return NULL;
+    return;
 
-  assert(*absolute != NULL);
+  assert(absolute != NULL);
 
-  if (!*absolute)
-    return NULL;
+  if (!absolute)
+    return;
 
   memcpy(*absolute, _Temp, length);
 }
@@ -79,7 +77,7 @@ const char *fs_name(const char *path)
   return basename(path);
 }
 
-static fs_item_t *fs_fill_item(fs_item_t *fs, fs_item_kind kind, char *path, struct stat *s)
+static fs_item_t *fs_fill_item(fs_item_t *fs, fs_item_kind kind, const char *path, struct stat *s)
 {
   fs->kind = kind;
   fs->path = path;
@@ -134,11 +132,8 @@ const char *fs_find(const char *item, fs_path_t paths)
       char *temp = malloc(FS_PATH_MAX);
       memcpy(temp, item_path, FS_PATH_MAX);
 
-      free(absolute);
       return temp;
     }
-
-    free(absolute);
   }
 
   return NULL;
