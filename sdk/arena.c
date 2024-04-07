@@ -14,7 +14,7 @@ region_t *region_create(size_t capacity)
 {
   size_t size = sizeof(region_t) + sizeof(uintptr_t) * capacity;
 
-  region_t *region = malloc(size);
+  region_t *region = calloc(1, size);
   assert(region);
 
   if (!region)
