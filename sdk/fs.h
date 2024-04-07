@@ -19,8 +19,8 @@ typedef struct fs_item_t
 {
   fs_item_kind kind;
 
-  char *name;
-  char *path;
+  const char *name;
+  const char *path;
   int   size;
 } fs_item_t;
 
@@ -33,7 +33,7 @@ typedef struct fs_path_t
 const char  *fs_path(void); // Executable path
 const char  *fs_name(const char *path); // Basename of path
 fs_item_kind fs_kind(const char *path); // Kind of item the path is
-const char  *fs_find(const char *item, fs_path_t paths); // Returns allocated string path of item found in one of the paths
+bool         fs_find(const char *item, fs_path_t paths, char path[FS_PATH_MAX]);
 
 fs_item_t *fs_open(const char *path);
 void       fs_close(fs_item_t *item);
