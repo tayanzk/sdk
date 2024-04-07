@@ -144,11 +144,11 @@ void *map_set(map_t *map, void *key, u64 size, void *value)
       if (!grow(map))
         return NULL;
 
-    entry         = allocate(map->allocator, sizeof(entry_t));
-    entry->key    = key;
-    entry->hash   = hash;
-    entry->size   = size;
-    entry->next   = map->buckets[index];
+    entry       = allocate(map->allocator, sizeof(entry_t));
+    entry->key  = key;
+    entry->hash = hash;
+    entry->size = size;
+    entry->next = map->buckets[index];
   
     map->buckets[index] = entry;
     map->entries++;
