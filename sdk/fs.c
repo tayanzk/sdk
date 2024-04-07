@@ -17,7 +17,7 @@ typedef struct fs_base_t
 
 static char _DirectoryName[FS_PATH_MAX] = { 0 };
 
-static void fs_absolute(const char *path, char *absolute[FS_PATH_MAX])
+static void fs_absolute(const char *path, char absolute[FS_PATH_MAX])
 {
   static char _Temp[FS_PATH_MAX] = { 0 };
   int length;
@@ -36,7 +36,7 @@ static void fs_absolute(const char *path, char *absolute[FS_PATH_MAX])
   if (!absolute)
     return;
 
-  memcpy(*absolute, _Temp, length);
+  memcpy(absolute, _Temp, length);
 }
 
 const char *fs_path()
@@ -45,7 +45,7 @@ const char *fs_path()
   _DirectoryName[length] = 0;
 
   void *last = memrchr(_DirectoryName, '/', length - 2);
-  _DirectoryName[(char *)last - _DirectoryName] = 0;
+  _DirectoryName[(char *) last - _DirectoryName] = 0;
 
   return _DirectoryName;
 }
@@ -74,7 +74,7 @@ fs_item_kind fs_kind(const char *path)
 
 const char *fs_name(const char *path)
 {
-  return basename(path);
+  return basename((char *) path);
 }
 
 static fs_item_t *fs_fill_item(fs_item_t *fs, fs_item_kind kind, const char *path, struct stat *s)
@@ -114,7 +114,7 @@ static void fs_scan(fs_item_t *it, const char *path, struct stat *s, bool base)
   }
 }
 
-const char *fs_find(const char *item, fs_path_t paths)
+bool fs_find(const char *item, fs_path_t paths, char path[FS_PATH_MAX])
 {
   char item_path[FS_PATH_MAX];
 
@@ -123,20 +123,19 @@ const char *fs_find(const char *item, fs_path_t paths)
     char *path = paths.paths[i];
     char absolute[FS_PATH_MAX];
 
-    fs_absolute(path, &absolute);
+    fs_absolute(path, absolute);
 
     snprintf(item_path, FS_PATH_MAX, "%s/%s", absolute, item);
 
     if (fs_kind(item_path))
     {
-      char *temp = malloc(FS_PATH_MAX);
-      memcpy(temp, item_path, FS_PATH_MAX);
+      memcpy(path, item_path, FS_PATH_MAX);
 
-      return temp;
+      return true;
     }
   }
 
-  return NULL;
+  return false;
 }
 
 fs_item_t *fs_open(const char *path)
@@ -144,14 +143,14 @@ fs_item_t *fs_open(const char *path)
   struct stat s;
   
   char *absolute = malloc(FS_PATH_MAX);
-  fs_absolute(path, &absolute);
+  fs_absolute(path, absolute);
 
   fs_base_t *fs = malloc(sizeof (fs_base_t));
   assert(fs != NULL);
 
   if (stat(absolute, &s) != -1)
   {
-    fs_scan(fs, absolute, &s, true);
+    fs_scan((fs_item_t *) fs, absolute, &s, true);
   }
   else
   {
@@ -161,7 +160,7 @@ fs_item_t *fs_open(const char *path)
     return NULL;
   }
 
-  return fs;
+  return (fs_item_t *) fs;
 }
 
 void fs_close(fs_item_t *item)
@@ -177,9 +176,9 @@ void fs_close(fs_item_t *item)
   }
 
   if (fs->iter.path)
-    free(fs->iter.path);
+    free((char *) fs->iter.path);
   
-  free(item->path);
+  free((char *) item->path);
   free(item);
 }
 
@@ -247,7 +246,7 @@ fs_item_t *fs_iter(fs_item_t *directory, fs_item_t **iter)
   }
   else
   {
-    free(fs->iter.path);
+    free((char *) fs->iter.path);
     fs->iter = (fs_item_t) { 0 };
   }
 
