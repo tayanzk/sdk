@@ -10,6 +10,8 @@
 #define min(a, b) (((a) > (b)) ? ((b)) : ((a)))
 #define max(a, b) (((a) > (b)) ? ((a)) : ((b)))
 
+typedef const char *       cstr;
+
 typedef unsigned char      uchar;
 typedef unsigned short     ushort;
 typedef unsigned int       uint;
