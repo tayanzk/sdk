@@ -17,7 +17,7 @@ typedef struct fs_base_t
 
 static char _DirectoryName[FS_PATH_MAX] = { 0 };
 
-static void fs_absolute(const char *path, char absolute[FS_PATH_MAX])
+static void fs_absolute(cstr path, char absolute[FS_PATH_MAX])
 {
   static char _Temp[FS_PATH_MAX] = { 0 };
   int length;
@@ -39,7 +39,7 @@ static void fs_absolute(const char *path, char absolute[FS_PATH_MAX])
   memcpy(absolute, _Temp, length);
 }
 
-const char *fs_path()
+cstr fs_path()
 {
   uint length = readlink("/proc/self/exe", _DirectoryName, FS_PATH_MAX);
   _DirectoryName[length] = 0;
@@ -50,7 +50,7 @@ const char *fs_path()
   return _DirectoryName;
 }
 
-fs_item_kind fs_kind(const char *path)
+fs_item fs_kind(cstr path)
 {
   struct stat s;
 
@@ -58,26 +58,26 @@ fs_item_kind fs_kind(const char *path)
   {
     if (s.st_mode & S_IFDIR)
     {
-      return FS_ITEM_DIRECTORY;
+      return FS_DIRECTORY;
     }
 
     if (s.st_mode & S_IFREG)
     {
-      return FS_ITEM_FILE;
+      return FS_FILE;
     }
 
-    return FS_ITEM_UNKNOWN;
+    return FS_UNKNOWN;
   }
 
-  return FS_ITEM_NONE;
+  return FS_NONE;
 }
 
-const char *fs_name(const char *path)
+cstr fs_name(cstr path)
 {
   return basename((char *) path);
 }
 
-static fs_item_t *fs_fill_item(fs_item_t *fs, fs_item_kind kind, const char *path, struct stat *s)
+static fs_item_t *fs_fill_item(fs_item_t *fs, fs_item kind, cstr path, struct stat *s)
 {
   fs->kind = kind;
   fs->path = path;
@@ -87,7 +87,7 @@ static fs_item_t *fs_fill_item(fs_item_t *fs, fs_item_kind kind, const char *pat
   return fs;
 }
 
-static void fs_scan(fs_item_t *it, const char *path, struct stat *s, bool base)
+static void fs_scan(fs_item_t *it, cstr path, struct stat *s, bool base)
 {
   // NOTE: Only works for directories and files
   // TODO: Support links
@@ -95,7 +95,7 @@ static void fs_scan(fs_item_t *it, const char *path, struct stat *s, bool base)
   // Directory
   if (s->st_mode & S_IFDIR)
   {
-    fs_base_t *fs = (fs_base_t *) fs_fill_item(it, FS_ITEM_DIRECTORY, path, s);
+    fs_base_t *fs = (fs_base_t *) fs_fill_item(it, FS_DIRECTORY, path, s);
     
     if (base)
     {
@@ -106,19 +106,19 @@ static void fs_scan(fs_item_t *it, const char *path, struct stat *s, bool base)
   // File
   else if (s->st_mode & S_IFREG)
   {
-    fs_fill_item(it, FS_ITEM_FILE, path, s);
+    fs_fill_item(it, FS_FILE, path, s);
   }
   else
   {
-    fs_fill_item(it, FS_ITEM_UNKNOWN, path, s);
+    fs_fill_item(it, FS_UNKNOWN, path, s);
   }
 }
 
-bool fs_find(const char *item, fs_path_t paths, char path[FS_PATH_MAX])
+bool fs_find(cstr item, fs_path_t paths, char path[FS_PATH_MAX])
 {
   char item_path[FS_PATH_MAX];
 
-  for (int i = 0; i < paths.count; i++)
+  for (int i = 0; i < paths.length; i++)
   {
     char *path = paths.paths[i];
     char absolute[FS_PATH_MAX];
@@ -138,7 +138,7 @@ bool fs_find(const char *item, fs_path_t paths, char path[FS_PATH_MAX])
   return false;
 }
 
-fs_item_t *fs_open(const char *path)
+fs_item_t *fs_open(cstr path)
 {
   struct stat s;
   
@@ -170,10 +170,8 @@ void fs_close(fs_item_t *item)
   assert(item       != NULL);
   assert(item->path != NULL);
 
-  if (item->kind == FS_ITEM_DIRECTORY)
-  {
+  if (item->kind == FS_DIRECTORY)
     closedir(fs->dir);
-  }
 
   if (fs->iter.path)
     free((char *) fs->iter.path);
@@ -186,7 +184,7 @@ uint fs_read(fs_item_t *item, char **data, uint bytes)
 {
   assert(item       != NULL);
   assert(item->path != NULL);
-  assert(item->kind == FS_ITEM_FILE);
+  assert(item->kind == FS_FILE);
 
   FILE *file = fopen(item->path, "r");
   uint read;
@@ -211,11 +209,11 @@ uint fs_read(fs_item_t *item, char **data, uint bytes)
   return read;
 }
 
-uint fs_write(fs_item_t *item, const char *data, uint bytes)
+uint fs_write(fs_item_t *item, const char **data, uint bytes)
 {
   assert(item != NULL);
   assert(item->path != NULL);
-  assert(item->kind == FS_ITEM_FILE);
+  assert(item->kind == FS_FILE);
 
   FILE *file = fopen(item->path, "w");
 
@@ -238,7 +236,7 @@ fs_item_t *fs_iter(fs_item_t *directory, fs_item_t **iter)
 
   assert(directory       != NULL);
   assert(directory->path != NULL);
-  assert(directory->kind == FS_ITEM_DIRECTORY);
+  assert(directory->kind == FS_DIRECTORY);
 
   if (*iter == NULL)
   {
