@@ -5,13 +5,8 @@
 
 typedef struct string_t
 {
-  cstr string;
-  uint length;
+  char *string;
+  uint  length;
 } string_t;
-
-static inline string_t string(cstr string)
-{
-  return (string_t) { .string = string, .length = strlen(string) };
-}
 
 #endif
