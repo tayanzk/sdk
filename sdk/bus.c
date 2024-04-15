@@ -40,7 +40,7 @@ void bus_handler(bus_t *bus, bus_handler_fn fn)
 {
   assert(bus && bus->handlers && bus->events);
 
-  buf_push(bus->handlers, fn);
+  buf_push(bus->handlers, &fn);
 }
 
 void bus_call(bus_t *bus, bus_event_t *event)
@@ -53,7 +53,7 @@ void bus_call(bus_t *bus, bus_event_t *event)
 
   for (uint i = 0; i < length; i++)
   {
-    if (handlers[i](bus->user, event))
+    if (handlers[i] && handlers[i](bus->user, event))
       break;
   }
 }
@@ -69,7 +69,7 @@ void bus_push(bus_t *bus, bus_event_t *event)
 void bus_poll(bus_t *bus)
 {
   assert(bus && bus->handlers && bus->events);
-  bus_event_t *event = (bus_event_t *) bus->handlers->data;
+  bus_event_t *event = (bus_event_t *) bus->events->data;
 
   while ((char *) event < (char *) bus->events->top)
   {
@@ -78,4 +78,6 @@ void bus_poll(bus_t *bus)
     bus_call(bus, event);
     event += event->size;
   }
+  
+  bus->events->top = bus->events->data;
 }
