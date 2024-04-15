@@ -116,16 +116,17 @@ static void fs_scan(fs_item_t *it, cstr path, struct stat *s, bool base)
 
 bool fs_find(cstr item, fs_path_t paths, char path[FS_PATH_MAX])
 {
-  char item_path[FS_PATH_MAX];
+  static const u32 item_length = FS_PATH_MAX * 2 + 2;
+  char item_path[item_length];
 
   for (int i = 0; i < paths.length; i++)
   {
-    char *path = paths.paths[i];
+    char *current = paths.paths[i];
     char absolute[FS_PATH_MAX];
 
-    fs_absolute(path, absolute);
+    fs_absolute(current, absolute);
 
-    snprintf(item_path, FS_PATH_MAX, "%s/%s", absolute, item);
+    snprintf(item_path, item_length, "%s/%s", absolute, item);
 
     if (fs_kind(item_path))
     {
