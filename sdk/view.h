@@ -9,4 +9,6 @@ typedef struct string_t
   uint  length;
 } string_t;
 
+#define string(s) (string_t) { .string = s, .length = strlen(s) }
+
 #endif
