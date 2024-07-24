@@ -5,10 +5,10 @@
 
 typedef struct string_t
 {
-  char *string;
-  uint  length;
+  cstr string;
+  uint length;
 } string_t;
 
-#define string(s) (string_t) { .string = s, .length = strlen(s) }
+#define string_view(s) (string_t) { .string = s, .length = strlen(s) }
 
 #endif
